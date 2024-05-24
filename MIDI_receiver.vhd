@@ -51,11 +51,14 @@ architecture Behavioral of MIDI_receiver is
 type state_type is (idle, wait0, shift0, wait1, shift1, byte_ready);
 signal cs, ns : state_type := idle;
 -- control signals
-signal shift_en, clr_sig, bit_tc, rx_done_sig, baud_tc, bit_tc : std_logic := '0';
+signal shift_en, clr_sig, bit_tc, rx_done_sig, baud_tc : std_logic := '0';
 
 -- shift register
-signal MSB_in : std_logic := '0';
-signal shift_reg : std_logic_vector(9 downto 0) := (others => 0);
+signal MSB_in : std_logic := '1'; -- sanitized input
+signal shift_reg : std_logic_vector(9 downto 0) := (others => '0');
+
+-- intermediate flip flop signal
+signal inputFF : std_logic := '1';
 
 --=============================================================
 --Port Mapping + Processes:
@@ -154,7 +157,13 @@ end process shift_reg_logic;
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Synchronizer Logic:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++   
--- not sure what to do here
+sanitize_input_logic : process(sclk)
+begin
+  if rising_edge(sclk) then
+    inputFF <= MIDI_in;
+    MSB_in <= inputFF;
+  end if;
+end process sanitize_input_logic;
 
 -- tie pins to outputs
 byte_out <= shift_reg(8 downto 1);
