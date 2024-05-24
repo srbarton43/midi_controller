@@ -40,6 +40,24 @@ component system_clock_generator is
         sclk	    : out std_logic);
 end component;
 
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--MIDI Receiver:
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+component MIDI_receiver is
+  Port (
+    -- inputs
+    -- 1MHz clock
+    sclk : in std_logic;
+    -- serial midi bit
+    MIDI_in : in std_logic;
+    
+    -- outputs
+    -- byte of data
+    byte_out : out std_logic_vector(7 downto 0);
+    -- done receiving signal
+    rx_done   : out std_logic);
+end component;
+
 --=============================================================
 --Local Signal Declaration
 --=============================================================
@@ -63,5 +81,11 @@ port map(
 	sclk 	  => sclk_sig);
 sclk_port <= sclk_sig;
 
+receiver : MIDI_receiver
+port map(
+  sclk => sclk_sig,
+  MIDI_in => MIDI_in_port,
+  byte_out => byte_sig,
+  rx_done => rx_done_sig);
     
 end Behavioral; 
