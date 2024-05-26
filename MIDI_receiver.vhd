@@ -51,7 +51,7 @@ architecture Behavioral of MIDI_receiver is
 type state_type is (idle, wait0, shift0, wait1, shift1, byte_ready);
 signal cs, ns : state_type := idle;
 -- control signals
-signal shift_en, clr_sig, bit_tc, rx_done_sig, baud_tc : std_logic := '0';
+signal shift_en, clr_sig, bit_tc, rx_done_sig, baud_tc, TC2, shift_0_sig : std_logic := '0';
 
 -- shift register
 signal MSB_in : std_logic := '1'; -- sanitized input
@@ -60,22 +60,14 @@ signal shift_reg : std_logic_vector(9 downto 0) := (others => '0');
 -- intermediate flip flop signal
 signal inputFF : std_logic := '1';
 
+-- baud_counter
+signal baud_count : integer := 0;
+constant BAUD_MAX_COUNT : integer := 32;
+
 --=============================================================
 --Port Mapping + Processes:
 --=============================================================
 begin
---+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
---Baud Counter:
---+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
-baud_counter : counter
-generic map (
-  MAX_COUNT => 32)
-port map(
-  clk => sclk,
-  clr => clr_sig,
-  en => '1',
-  tc => baud_tc);
-  
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Bit Counter:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
@@ -87,6 +79,31 @@ port map(
   clr => clr_sig,
   en => shift_en,
   tc => bit_tc);
+
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--Baud Counter:
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
+baud_count_logic : process(sclk, baud_tc, clr_sig, shift_0_sig)
+begin
+  if rising_edge(sclk) then
+    baud_count <= baud_count + 1;
+    if baud_tc = '1' or clr_sig = '1' or shift_0_sig = '1' then
+      baud_count <= 0;
+    end if;
+  end if;
+end process baud_count_logic;
+
+baud_tc_logic : process(baud_count)
+begin
+  baud_tc <= '0';
+  TC2 <= '0';
+  if baud_count = BAUD_MAX_COUNT / 2 - 1 then
+    TC2 <= '1';
+  elsif baud_count = BAUD_MAX_COUNT - 1 then
+    TC2 <= '1';
+    baud_tc <= '1';
+  end if;
+end process baud_tc_logic;
 
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Update State:
@@ -101,20 +118,20 @@ end process update_state;
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Next State Logic:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
-next_state_logic : process(cs, MIDI_in, baud_tc, bit_tc)
+next_state_logic : process(cs, MSB_in, baud_tc, bit_tc, TC2)
 begin
   ns <= cs;
   case cs is
     when idle => 
-      if MIDI_in = '0' then
-        ns <= cs;
+      if MSB_in = '0' then
+        ns <= wait0;
       end if;
     when wait0 =>
-      if baud_tc = '1' then
-        ns <= shift1;
+      if TC2 = '1' then
+        ns <= shift0;
       end if;
     when shift0 => ns <= wait1;
-    when wait1 => 
+    when wait1 =>
       if baud_tc = '1' then
         ns <= shift1;
       end if;
@@ -124,6 +141,7 @@ begin
       else
         ns <= wait1;
       end if;
+    when byte_ready => ns <= idle;
   end case;
 end process next_state_logic;
 
@@ -135,9 +153,10 @@ begin
   clr_sig <= '0';
   shift_en <= '0';
   rx_done_sig <= '0';
+  shift_0_sig <= '0';
   case cs is 
     when idle => clr_sig <= '1';
-    when shift0 => shift_en <= '1';
+    when shift0 => shift_en <= '1'; shift_0_sig <= '1';
     when shift1 => shift_en <= '1';
     when byte_ready => rx_done_sig <= '1';
     when others =>
@@ -150,7 +169,9 @@ end process output_logic;
 shift_reg_logic : process(sclk, MSB_in, shift_en)
 begin 
   if rising_edge(sclk) then
-    shift_reg <= MSB_in & shift_reg;
+    if shift_en = '1' then
+      shift_reg <= MSB_in & shift_reg(9 downto 1);
+    end if;
   end if;
 end process shift_reg_logic;
 

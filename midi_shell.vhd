@@ -34,7 +34,7 @@ architecture Behavioral of midi_top_level is
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --System Clock Generation:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-component system_clock_generator is
+component system_clock_generation is
     port (
         hw_clk		: in  std_logic;
         sclk	    : out std_logic);
@@ -75,7 +75,7 @@ begin
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Timing:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
-clocking: system_clock_generator 
+clocking: system_clock_generation 
 port map(
 	hw_clk  => hw_clk_port,
 	sclk 	  => sclk_sig);

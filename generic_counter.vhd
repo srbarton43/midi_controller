@@ -43,8 +43,11 @@ begin
     if rising_edge(clk) then
       if en = '1' then
         count <= count + 1;
+        if tc_sig = '1' then
+          count <= 0;
+        end if;
       end if;
-      if tc_sig = '1' or clr = '1' then
+      if clr = '1' then
         count <= 0;
       end if;
     end if;
