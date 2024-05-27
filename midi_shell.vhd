@@ -37,7 +37,8 @@ architecture Behavioral of midi_top_level is
 component system_clock_generation is
     port (
         hw_clk		: in  std_logic;
-        sclk	    : out std_logic);
+        sclk	    : out std_logic;
+        fwd_clk   : out std_logic);
 end component;
 
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -59,6 +60,19 @@ component MIDI_receiver is
 end component;
 
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--Datapath:
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+component datapath is 
+  port (
+    sclk    : in  std_logic;
+    byte_in : in  std_logic_vector(7 downto 0);
+    rx_done : in  std_logic;
+    key_down : out std_logic;
+    m_out   : out std_logic_vector(8 downto 0)
+  );
+end component;
+
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --DAC Interface:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 component DAC_interface is
@@ -75,7 +89,7 @@ component DAC_interface is
     -- bit of serial data out
     s_data : out std_logic;
     -- Chip select
-    spi_CS : out std_logic;
+    spi_CS : out std_logic
   );
 end component;
 
@@ -99,8 +113,8 @@ begin
 clocking: system_clock_generation 
 port map(
 	hw_clk  => hw_clk_port,
-	sclk 	  => sclk_sig);
-sclk_port <= sclk_sig;
+	sclk 	  => sclk_sig,
+  fwd_clk => sclk_port);
 
 receiver : MIDI_receiver
 port map(
@@ -109,13 +123,22 @@ port map(
   byte_out => byte_sig,
   rx_done => rx_done_sig);
 
+dpath : datapath
+port map(
+  sclk => sclk_sig,
+  byte_in => byte_sig,
+  rx_done => rx_done_sig,
+  key_down => key_down_sig,
+  m_out => m_sig
+);
+
 DAC : DAC_Interface
 port map(
-   sclk => sclk_sig; 
-   data_in => ampl_sig;
-   start => key_down_sig;
-   s_data => spi_cs_port;
-   spi_CS => spi_data_port;
+   sclk => sclk_sig, 
+   data_in => ampl_sig,
+   start => key_down_sig,
+   s_data => spi_cs_port,
+   spi_CS => spi_data_port
 );
     
 end Behavioral; 

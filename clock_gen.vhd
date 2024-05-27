@@ -16,7 +16,9 @@ entity system_clock_generation is
         --External Clock:
             hw_clk		: in std_logic;
         --System Clock:
-            sclk		: out std_logic);
+            sclk		: out std_logic;
+        --Forward Clock
+            fwd_clk : out std_logic);
 end system_clock_generation;
 
 --=============================================================================
@@ -35,6 +37,7 @@ constant CLOCK_DIVIDER_TC: integer := 25;
 constant COUNT_LEN			: integer := integer(ceil( log2( real(CLOCK_DIVIDER_TC) ) ));
 signal system_clk_divider_counter	: unsigned(COUNT_LEN-1 downto 0) := (others => '0');
 signal system_clk_tog			: std_logic := '0';                        				
+signal system_clk_sig     : std_logic := '0';
 
 --=============================================================================
 --Processes: 
@@ -61,6 +64,24 @@ end process Clock_divider;
 -- The BUFG component puts the system clock onto the FPGA clocking network
 Slow_clock_buffer: BUFG
       port map (I => system_clk_tog,
-                O => sclk );
-				
+                O => system_clk_sig);
+      sclk <= system_clk_sig;
+
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-- Clock Forwarding
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++				
+clock_forwarding_ODDR : ODDR
+generic map(
+	DDR_CLK_EDGE => "SAME_EDGE", -- "OPPOSITE_EDGE" or "SAME_EDGE"
+	INIT => '0', -- Initial value for Q port ('1' or '0')
+	SRTYPE => "SYNC") -- Reset Type ("ASYNC" or "SYNC")
+port map (
+	Q => fwd_clk, -- 1-bit DDR output
+	C => system_clk_sig, -- 1-bit clock input
+	CE => '1', -- 1-bit clock enable input
+	D1 => '1', -- 1-bit data input (positive edge)
+	D2 => '0', -- 1-bit data input (negative edge)
+	R => '0', -- 1-bit reset input
+	S => '0' -- 1-bit set input
+);	
 end behavioral_architecture;
