@@ -51,7 +51,7 @@ architecture Behavioral of MIDI_receiver is
 type state_type is (idle, wait0, shift0, wait1, shift1, byte_ready);
 signal cs, ns : state_type := idle;
 -- control signals
-signal shift_en, clr_sig, bit_tc, rx_done_sig, baud_tc, TC2, shift_0_sig : std_logic := '0';
+signal shift_en, clr_baud, clr_bit, bit_tc, rx_done_sig, baud_tc, TC2 : std_logic := '0';
 
 -- shift register
 signal MSB_in : std_logic := '1'; -- sanitized input
@@ -76,18 +76,18 @@ generic map (
   MAX_COUNT => 10)
 port map(
   clk => sclk,
-  clr => clr_sig,
+  clr => clr_bit,
   en => shift_en,
   tc => bit_tc);
 
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Baud Counter:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
-baud_count_logic : process(sclk, baud_tc, clr_sig, shift_0_sig)
+baud_count_logic : process(sclk, baud_tc, clr_baud)
 begin
   if rising_edge(sclk) then
     baud_count <= baud_count + 1;
-    if baud_tc = '1' or clr_sig = '1' or shift_0_sig = '1' then
+    if baud_tc = '1' or clr_baud = '1' then
       baud_count <= 0;
     end if;
   end if;
@@ -150,13 +150,13 @@ end process next_state_logic;
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++   
 output_logic : process(cs)
 begin
-  clr_sig <= '0';
+  clr_bit <= '0';
   shift_en <= '0';
   rx_done_sig <= '0';
-  shift_0_sig <= '0';
+  clr_baud <= '0';
   case cs is 
-    when idle => clr_sig <= '1';
-    when shift0 => shift_en <= '1'; shift_0_sig <= '1';
+    when idle => clr_bit <= '1'; clr_baud <= '1';
+    when shift0 => shift_en <= '1'; clr_baud <= '1';
     when shift1 => shift_en <= '1';
     when byte_ready => rx_done_sig <= '1';
     when others =>
