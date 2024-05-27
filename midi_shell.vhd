@@ -58,6 +58,27 @@ component MIDI_receiver is
     rx_done   : out std_logic);
 end component;
 
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--DAC Interface:
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+component DAC_interface is
+  Port (
+    -- inputs
+    -- 1MHz clock
+    sclk : in std_logic;
+    -- start bit
+    start : in std_logic;
+    -- parallel data input
+    data_in : in std_logic_vector(11 downto 0);
+    
+    -- outputs
+    -- bit of serial data out
+    s_data : out std_logic;
+    -- Chip select
+    spi_CS : out std_logic;
+  );
+end component;
+
 --=============================================================
 --Local Signal Declaration
 --=============================================================
@@ -87,5 +108,14 @@ port map(
   MIDI_in => MIDI_in_port,
   byte_out => byte_sig,
   rx_done => rx_done_sig);
+
+DAC : DAC_Interface
+port map(
+   sclk => sclk_sig; 
+   data_in => ampl_sig;
+   start => key_down_sig;
+   s_data => spi_cs_port;
+   spi_CS => spi_data_port;
+);
     
 end Behavioral; 
