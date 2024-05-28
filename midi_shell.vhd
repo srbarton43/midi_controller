@@ -68,7 +68,7 @@ component datapath is
     byte_in : in  std_logic_vector(7 downto 0);
     rx_done : in  std_logic;
     key_down : out std_logic;
-    m_out   : out std_logic_vector(8 downto 0)
+    m_out   : out std_logic_vector(13 downto 0)
   );
 end component;
 
@@ -100,7 +100,7 @@ signal sclk_sig         : std_logic := '0';
 signal rx_done_sig      : std_logic := '0';                   
 signal byte_sig         : std_logic_vector(7 downto 0) := (others => '0');
 signal key_down_sig     : std_logic := '0';
-signal m_sig            : std_logic_vector(8 downto 0) := (others => '0');
+signal m_sig            : std_logic_vector(13 downto 0) := (others => '0');
 signal ampl_sig         : std_logic_vector(11 downto 0) := (others => '0');
 
 --=============================================================

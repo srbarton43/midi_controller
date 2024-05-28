@@ -18,7 +18,7 @@ entity datapath is
     byte_in : in  std_logic_vector(7 downto 0);
     rx_done : in  std_logic;
     key_down : out std_logic;
-    m_out   : out std_logic_vector(8 downto 0)
+    m_out   : out std_logic_vector(13 downto 0)
   );
 end datapath;
 
@@ -32,7 +32,7 @@ component datapath_m_BROM is
   port (
     clka : IN STD_LOGIC;
     addra : IN STD_LOGIC_VECTOR(6 DOWNTO 0);
-    douta : OUT STD_LOGIC_VECTOR(8 DOWNTO 0)
+    douta : OUT STD_LOGIC_VECTOR(13 DOWNTO 0)
   );
 end component;
 
@@ -57,7 +57,7 @@ signal B3_reg : std_logic_vector(7 downto 0) := (others => '0');
 signal B2_reg : std_logic_vector(7 downto 0) := (others => '0');
 signal B1_reg : std_logic_vector(7 downto 0) := (others => '0');
 signal status_reg : std_logic := '0';
-signal m_reg : std_logic_vector(8 downto 0) := (others => '0');
+signal m_reg : std_logic_vector(13 downto 0) := (others => '0');
 
 -- controller
 type state_type is (idle, shifting, checkStatus, delay, enableOut);
@@ -72,7 +72,7 @@ signal delay_count_tc : std_logic := '0';
 signal enable_out_registers : std_logic := '0';
 
 -- output registers
-signal brom_out : std_logic_vector(8 downto 0) := (others => '0'); 
+signal brom_out : std_logic_vector(13 downto 0) := (others => '0'); 
 signal key_down_signal : std_logic := '0';
 
 -- constants
