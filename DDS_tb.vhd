@@ -37,7 +37,7 @@ signal sclk : std_logic;
 signal m_data : std_logic_vector(13 downto 0);
 signal amp_to_DAC    : std_logic_vector(11 downto 0);
 
-CONSTANT clk_period : time := 40 ns;
+CONSTANT clk_period : time := 1 us;
 CONSTANT sample_period : time := 23 * clk_period;
 
 begin
@@ -70,7 +70,7 @@ end process clkgen_proc;
 stim_proc: process
 begin		
 m_data <= "00000101000111"; --Equal to 327, should generate around 440Hz
-wait for 30 * sample_period;
+wait for 120 * sample_period;
 m_data <= "00001010001110";  --Equal to 654, should generate around 880Hz (one octave up)
 wait for 30 * sample_period;
 m_data <= "11111111111111"; --Very high frequency 

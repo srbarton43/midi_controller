@@ -8,7 +8,7 @@
 ##====================================================================
 set_property PACKAGE_PIN W5 [get_ports hw_clk_port]							
 	set_property IOSTANDARD LVCMOS33 [get_ports hw_clk_port]
-	create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clk_ext_port]
+	create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports hw_clk_port]
 
 ##====================================================================
 ## Pmod Header JA
@@ -25,6 +25,10 @@ set_property PACKAGE_PIN L2 [get_ports {spi_data_port}]
 #Sch name = JA4
 set_property PACKAGE_PIN G2 [get_ports {spi_sclk_port}]					
 	set_property IOSTANDARD LVCMOS33 [get_ports {spi_sclk_port}]
+
+#sch name = JA7
+set_property PACKAGE_PIN H1 [get_ports {take_sample_port}]
+set_property IOSTANDARD LVCMOS33 [get_ports {take_sample_port}]
 
 ##====================================================================
 ## Pmod Header JB

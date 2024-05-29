@@ -1,8 +1,7 @@
 --=============================================================
---Ben Dobbins
+--Sam Barton
 --ES31/CS56
---This script is the shell code for Lab 6, the voltmeter.
---Your name goes here: 
+--Provides shell for testing Sin_LUT output waveform
 --=============================================================
 
 --=============================================================
@@ -73,6 +72,19 @@ component datapath is
 end component;
 
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--DDS:
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+component DDS is
+  port (
+    --inputs
+    sclk : in std_logic;
+    m_in : in std_logic_vector(13 downto 0);
+    --outputs
+    amp_out : out std_logic_vector(11 downto 0)
+  );
+end component;
+
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --DAC Interface:
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 component DAC_interface is
@@ -130,6 +142,13 @@ port map(
   rx_done => rx_done_sig,
   key_down => key_down_sig,
   m_out => m_sig
+);
+
+DDS_blk : DDS
+port map(
+  sclk => sclk_sig,
+  m_in => m_sig,
+  amp_out => ampl_sig
 );
 
 DAC : DAC_Interface

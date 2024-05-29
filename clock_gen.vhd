@@ -28,10 +28,7 @@ architecture behavioral_architecture of system_clock_generation is
 --=============================================================================
 --Signal Declarations: 
 --=============================================================================
---CONSTANT FOR SYNTHESIS:
---constant CLOCK_DIVIDER_TC: integer := 50;
---CONSTANT FOR SIMULATION:
-constant CLOCK_DIVIDER_TC: integer := 25;
+constant CLOCK_DIVIDER_TC: integer := 50;
 
 --Automatic register sizing:
 constant COUNT_LEN			: integer := integer(ceil( log2( real(CLOCK_DIVIDER_TC) ) ));

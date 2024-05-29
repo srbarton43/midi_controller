@@ -16,7 +16,8 @@ entity DDS is
   port (
     sclk    : in  std_logic;
     m_in    : in  std_logic_vector(13 downto 0);
-    amp_out : out std_logic_vector(11 downto 0)
+    amp_out : out std_logic_vector(11 downto 0);
+    take_sample : out std_logic
     );
 end DDS;
   
@@ -65,7 +66,7 @@ begin
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
 sample_counter : counter
 generic map (
-  MAX_COUNT => 22)
+  MAX_COUNT => 23)
 port map(
   clk => sclk,
   clr => '0', --Maybe tie to something else
@@ -86,7 +87,7 @@ Sine_LUT : dds_compiler_1
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --LUT Address Counter: (unsigned adder that will rollover)
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++		
-addr_count_logic : process(sclk, sample_tc)
+addr_count_logic : process(sclk, sample_tc, m)
 begin
   if rising_edge(sclk) then
     if sample_tc = '1' then
@@ -99,5 +100,6 @@ end process addr_count_logic;
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 amp_out <= full_amp_sig(11 downto 0);  --Tie first 12 to amplitude output
 m <= unsigned(m_in);                   --M tied to M input, made unsigned
+take_sample <= sample_tc;
 
 end Behavioral;

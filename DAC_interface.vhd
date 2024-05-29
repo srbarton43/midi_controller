@@ -16,8 +16,10 @@ entity DAC_interface is
     sclk 			 : in std_logic;
 
     --:
-    start             : in std_logic; --signal that key has been pressed
+    key_down             : in std_logic; --signal that key has been pressed
     data_in              : in std_logic_vector(11 downto 0);
+    take_sample          : in std_logic; -- signal for 44 kHz sampler
+    
 
     --outputs
     spi_CS               : out std_logic; 
@@ -30,15 +32,31 @@ end DAC_interface;
 --=============================================================================
 architecture behavioral_architecture of DAC_interface is
 --=============================================================================
+--Component Declarations: 
+--=============================================================================
+component counter is 
+    generic (
+      MAX_COUNT : integer);
+    port (
+      --timing
+      clk   : in std_logic;
+      -- sync clear port
+      clr   : in std_logic;
+      -- enable counting
+      en    : in std_logic;
+      tc    : out std_logic);
+  end component;
+--=============================================================================
 --Signal Declarations: 
 --=============================================================================
 --Control signals
     signal load_en             : std_logic; -- FSM to Register
     signal shift_en            : std_logic;
     signal bit_tc              : std_logic; --Bit counter to FSM
+    signal bit_clr             : std_logic;
 
 --Register signals
-    signal reg                : std_logic_vector(14 downto 0);
+    signal reg                : std_logic_vector(15 downto 0);
 
 --Controller signals
     type state_type is (sIdle, sLoad, sShift);
@@ -57,12 +75,12 @@ stateUpdate : process(sclk)
     end if;
 end process stateUpdate;
 
-nextStateLogic : process(current_state, bit_tc, start)
+nextStateLogic : process(current_state, bit_tc, key_down)
     begin
     next_state <= current_state; --Default
     case current_state is
         when sIdle =>
-            if start = '1' then --Wait for start bit
+            if key_down = '1' and take_sample = '1' then --Wait for start bit
                 next_state <= sLoad;
             end if; --Else stay Idle
         when sLoad =>
@@ -80,6 +98,7 @@ outputLogic : process(current_state)
     load_en <= '0';
     spi_cs <= '1'; --Idles high, transmits low
     shift_en <= '0';
+    bit_clr <= '1';
     case current_state is
         when sIdle => --Do default
             null;
@@ -88,41 +107,32 @@ outputLogic : process(current_state)
         when sShift => --Shift and transmit low
             shift_en <= '1';
             spi_cs <= '0';
+            bit_clr <= '0';
     end case;
 end process outputLogic;
 --===============================================================================
 --============================  Sub Count Proc ==================================
-
-shiftCount : process(shift_en, sclk)
-begin
-if rising_edge(sclk) then
-	if shift_en = '1' then 
-	    if shiftNum < 14 - 1 then --If count is still less than max, increment. (careful timing)
-	      bit_tc <= '0';
-		  shiftNum <= shiftNum + 1;
-		else --Else throw terminal count (to nextState)
-		  bit_tc <= '1';
-		  shiftNum <= 0;
-	    end if;
-	else  --Else if enable is not high, hold both signals at 0
-	   shiftNum <= 0;
-	   bit_tc <= '0'; --Set to 0 if not shifting
-	end if;
-end if;
-end process shiftCount;
+bit_counter : counter
+generic map (
+  MAX_COUNT => 16)
+port map(
+  clk => sclk,
+  clr => bit_clr,
+  en => shift_en,
+  tc => bit_tc);
 
 --================================================================================
 shift_Register : process(sclk)
     begin
     if rising_edge(sclk) then
         if load_en = '1' then
-            reg <= "000" & data_in;
+            reg <= "0000" & data_in;
         elsif shift_en = '1' then --Should not be both on at any time
-            reg <= reg(13 downto 0) & '0';
+            reg <= reg(14 downto 0) & '0';
         end if;
     end if;
 end process shift_Register;
 
 --Tie s_data to MSB of shift Register
-    s_data <= reg(14);
+    s_data <= reg(15);
 end behavioral_architecture;
