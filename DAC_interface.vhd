@@ -135,4 +135,5 @@ end process shift_Register;
 
 --Tie s_data to MSB of shift Register
     s_data <= reg(15);
+    s_data <= reg(14);
 end behavioral_architecture;
