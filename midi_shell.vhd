@@ -161,10 +161,10 @@ DAC : DAC_Interface
 port map(
    sclk => sclk_sig, 
    data_in => ampl_sig,
-   key_down => key_down_sig,
-   s_data => spi_cs_port,
-   spi_CS => spi_data_port,
-   take_sample => take_sample_sig
+   key_down => key_down_sig,   
+   take_sample => take_sample_sig,
+   s_data => spi_data_port,
+   spi_CS => spi_cs_port
 );
     
 end Behavioral; 
