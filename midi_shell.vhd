@@ -23,7 +23,7 @@ port (
 	midi_in_port		  : in  std_logic;			-- async midi signal
   spi_cs_port	      : out std_logic;		  -- spi chip select
 	spi_data_port			: out std_logic;			-- spi data out
-  sclk_port         : out std_logic);     -- sclk out for spi
+  spi_sclk_port         : out std_logic);     -- sclk out for spi
 end midi_top_level; 
 
 --=============================================================
@@ -80,7 +80,8 @@ component DDS is
     sclk : in std_logic;
     m_in : in std_logic_vector(13 downto 0);
     --outputs
-    amp_out : out std_logic_vector(11 downto 0)
+    amp_out : out std_logic_vector(11 downto 0);
+    take_sample : out std_logic
   );
 end component;
 
@@ -93,9 +94,11 @@ component DAC_interface is
     -- 1MHz clock
     sclk : in std_logic;
     -- start bit
-    start : in std_logic;
+    key_down : in std_logic;
     -- parallel data input
     data_in : in std_logic_vector(11 downto 0);
+     -- signal for 44 kHz sampler
+    take_sample          : in std_logic;
     
     -- outputs
     -- bit of serial data out
@@ -114,6 +117,7 @@ signal byte_sig         : std_logic_vector(7 downto 0) := (others => '0');
 signal key_down_sig     : std_logic := '0';
 signal m_sig            : std_logic_vector(13 downto 0) := (others => '0');
 signal ampl_sig         : std_logic_vector(11 downto 0) := (others => '0');
+signal take_sample_sig  : std_logic := '0';
 
 --=============================================================
 --Port Mapping + Processes:
@@ -126,7 +130,7 @@ clocking: system_clock_generation
 port map(
 	hw_clk  => hw_clk_port,
 	sclk 	  => sclk_sig,
-  fwd_clk => sclk_port);
+  fwd_clk => spi_sclk_port);
 
 receiver : MIDI_receiver
 port map(
@@ -148,16 +152,19 @@ DDS_blk : DDS
 port map(
   sclk => sclk_sig,
   m_in => m_sig,
-  amp_out => ampl_sig
+  amp_out => ampl_sig,
+  take_sample => take_sample_sig
+  
 );
 
 DAC : DAC_Interface
 port map(
    sclk => sclk_sig, 
    data_in => ampl_sig,
-   start => key_down_sig,
+   key_down => key_down_sig,
    s_data => spi_cs_port,
-   spi_CS => spi_data_port
+   spi_CS => spi_data_port,
+   take_sample => take_sample_sig
 );
     
 end Behavioral; 
