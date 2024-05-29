@@ -104,8 +104,8 @@ port map(
    data_in => data_sig,
    key_down => key_down,
    take_sample => take_sample_sig,
-   s_data => spi_cs_port,
-   spi_CS => spi_data_port
+   s_data => spi_data_port,
+   spi_CS => spi_cs_port
 );
 
 take_sample_port <= take_sample_sig;
