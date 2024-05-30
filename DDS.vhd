@@ -98,7 +98,7 @@ end process addr_count_logic;
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Asynchronous
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-amp_out <= '0' & not full_amp_sig(11) & full_amp_sig(10 downto 1);  --Tie first 12 to amplitude output
+amp_out <= not full_amp_sig(11) & full_amp_sig(10 downto 0);  --Tie first 12 to amplitude output
 m <= unsigned(m_in);                   --M tied to M input, made unsigned
 take_sample <= sample_tc;
 
