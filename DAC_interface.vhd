@@ -18,6 +18,7 @@ entity DAC_interface is
     --:
     key_down             : in std_logic; --signal that key has been pressed
     data_in              : in std_logic_vector(11 downto 0);
+    velocity_in          : in std_logic_vector(2 downto 0);
     take_sample          : in std_logic; -- signal for 44 kHz sampler
     
 
@@ -64,6 +65,8 @@ component counter is
 
 --Counter signals
     signal shiftNum            : integer := 0;
+
+    signal data_w_volume : std_logic_vector(11 downto 0) := (others => '0');
 
     BEGIN
 
@@ -126,12 +129,19 @@ shift_Register : process(sclk)
     begin
     if rising_edge(sclk) then
         if load_en = '1' then
-            reg <= "0000" & data_in;
+            reg <= "0000" & data_w_volume;
         elsif shift_en = '1' then --Should not be both on at any time
             reg <= reg(14 downto 0) & '0';
         end if;
     end if;
 end process shift_Register;
+
+--================================================================================
+apply_volume : process(velocity_in, data_in) 
+begin
+  -- divide by 8 and multiply by 1-8
+  data_w_volume <= std_logic_vector(shift_right(unsigned(data_in), 3) * (1 + unsigned(velocity_in)));
+end process apply_volume;
 
 --Tie s_data to MSB of shift Register
     s_data <= reg(15);

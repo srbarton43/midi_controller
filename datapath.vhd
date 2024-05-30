@@ -18,7 +18,8 @@ entity datapath is
     byte_in : in  std_logic_vector(7 downto 0);
     rx_done : in  std_logic;
     key_down : out std_logic;
-    m_out   : out std_logic_vector(13 downto 0)
+    m_out   : out std_logic_vector(13 downto 0);
+    velocity_out : out std_logic_vector(2 downto 0)
   );
 end datapath;
 
@@ -58,6 +59,7 @@ signal B2_reg : std_logic_vector(7 downto 0) := (others => '0');
 signal B1_reg : std_logic_vector(7 downto 0) := (others => '0');
 signal status_reg : std_logic := '0';
 signal m_reg : std_logic_vector(13 downto 0) := (others => '0');
+signal velocity_reg : std_logic_vector(2 downto 0) := (others => '0');
 
 -- controller
 type state_type is (idle, shifting, checkStatus, delay, enableOut);
@@ -71,7 +73,7 @@ signal delay_count_clear : std_logic := '1';
 signal delay_count_tc : std_logic := '0';
 signal enable_out_registers : std_logic := '0';
 
--- output registers
+-- signals to output regs
 signal brom_out : std_logic_vector(13 downto 0) := (others => '0'); 
 signal key_down_signal : std_logic := '0';
 
@@ -179,6 +181,7 @@ begin
     if enable_out_registers = '1' then
       status_reg <= key_down_signal;
       m_reg <= brom_out;
+      velocity_reg <= B3_reg(6 downto 4); -- 3 MSBs
     end if;
   end if;
 end process output_reg_logic;
@@ -201,5 +204,6 @@ end process status_signals_logic;
 -- tie registers to output ports
 m_out <= m_reg;
 key_down <= status_reg;
+velocity_out <= velocity_reg;
 
 end behavioral;
