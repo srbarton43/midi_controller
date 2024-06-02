@@ -67,6 +67,7 @@ component counter is
     signal shiftNum            : integer := 0;
 
     signal data_w_volume : std_logic_vector(11 downto 0) := (others => '0');
+    signal data_w_volume_padded : std_logic_vector(15 downto 0) := (others => '0');
 
     BEGIN
 
@@ -78,7 +79,7 @@ stateUpdate : process(sclk)
     end if;
 end process stateUpdate;
 
-nextStateLogic : process(current_state, bit_tc, key_down)
+nextStateLogic : process(current_state, bit_tc, key_down, take_sample)
     begin
     next_state <= current_state; --Default
     case current_state is
@@ -137,12 +138,12 @@ shift_Register : process(sclk)
 end process shift_Register;
 
 --================================================================================
-apply_volume : process(velocity_in, data_in) 
-begin
+
   -- divide by 8 and multiply by 1-8
-  data_w_volume <= std_logic_vector(shift_right(unsigned(data_in), 3) * (1 + unsigned(velocity_in)));
-end process apply_volume;
+  data_w_volume_padded <= std_logic_vector(shift_right(unsigned(data_in), 3) * (1 + unsigned('0' & velocity_in)));
+
 
 --Tie s_data to MSB of shift Register
     s_data <= reg(15);
+data_w_volume <= data_w_volume_padded(11 downto 0);
 end behavioral_architecture;
