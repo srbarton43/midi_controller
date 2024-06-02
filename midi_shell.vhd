@@ -67,7 +67,8 @@ component datapath is
     byte_in : in  std_logic_vector(7 downto 0);
     rx_done : in  std_logic;
     key_down : out std_logic;
-    m_out   : out std_logic_vector(13 downto 0)
+    m_out   : out std_logic_vector(13 downto 0);
+    velocity_out : out std_logic_vector(2 downto 0)
   );
 end component;
 
@@ -97,6 +98,8 @@ component DAC_interface is
     key_down : in std_logic;
     -- parallel data input
     data_in : in std_logic_vector(11 downto 0);
+    -- 3 bit velocity from dpath
+    velocity_in : in std_logic_vector(2 downto 0);
      -- signal for 44 kHz sampler
     take_sample          : in std_logic;
     
@@ -118,6 +121,7 @@ signal key_down_sig     : std_logic := '0';
 signal m_sig            : std_logic_vector(13 downto 0) := (others => '0');
 signal ampl_sig         : std_logic_vector(11 downto 0) := (others => '0');
 signal take_sample_sig  : std_logic := '0';
+signal velocity_sig     : std_logic_vector(2 downto 0) := (others => '0');
 
 --=============================================================
 --Port Mapping + Processes:
@@ -145,7 +149,8 @@ port map(
   byte_in => byte_sig,
   rx_done => rx_done_sig,
   key_down => key_down_sig,
-  m_out => m_sig
+  m_out => m_sig,
+  velocity_out => velocity_sig
 );
 
 DDS_blk : DDS
@@ -161,6 +166,7 @@ DAC : DAC_Interface
 port map(
    sclk => sclk_sig, 
    data_in => ampl_sig,
+   velocity_in => velocity_sig,
    key_down => key_down_sig,   
    take_sample => take_sample_sig,
    s_data => spi_data_port,

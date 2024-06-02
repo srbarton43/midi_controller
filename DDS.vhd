@@ -55,7 +55,7 @@ signal sample_tc : std_logic; --Terminal count sample rate counter
 signal m         : unsigned(13 downto 0);
 signal addr_count : unsigned(14 downto 0) := "000000000000000";
 signal full_amp_sig : std_logic_vector(15 downto 0);  --LUT gives a 16 bit signal, will take first 12 bits to DAC
-
+signal padded_addr : std_logic_vector(15 downto 0);
 
 --=============================================================
 --Port Mapping + Processes:
@@ -80,7 +80,7 @@ Sine_LUT : dds_compiler_1
   PORT MAP (
     aclk => sclk,
     s_axis_phase_tvalid => '1', --Enable input
-    s_axis_phase_tdata => '0' & std_logic_vector(addr_count),
+    s_axis_phase_tdata => padded_addr,
     m_axis_data_tvalid => open,
     m_axis_data_tdata => full_amp_sig
   );
@@ -101,5 +101,7 @@ end process addr_count_logic;
 amp_out <= not full_amp_sig(11) & full_amp_sig(10 downto 0);  --Tie first 12 to amplitude output
 m <= unsigned(m_in);                   --M tied to M input, made unsigned
 take_sample <= sample_tc;
+
+padded_addr <= '0' & std_logic_vector(addr_count);
 
 end Behavioral;
