@@ -66,9 +66,14 @@ component datapath is
     sclk    : in  std_logic;
     byte_in : in  std_logic_vector(7 downto 0);
     rx_done : in  std_logic;
-    key_down : out std_logic;
-    m_out   : out std_logic_vector(13 downto 0);
-    velocity_out : out std_logic_vector(2 downto 0)
+    m1_out   : out std_logic_vector(13 downto 0);
+    m2_out   : out std_logic_vector(13 downto 0);
+    m3_out   : out std_logic_vector(13 downto 0);
+    m4_out   : out std_logic_vector(13 downto 0);
+    v1_out : out std_logic_vector(2 downto 0);
+    v2_out : out std_logic_vector(2 downto 0);
+    v3_out : out std_logic_vector(2 downto 0);
+    v4_out : out std_logic_vector(2 downto 0)
   );
 end component;
 
@@ -78,10 +83,11 @@ end component;
 component DDS is
   port (
     --inputs
-    sclk : in std_logic;
-    m_in : in std_logic_vector(13 downto 0);
+    sclk  : in std_logic;
+    m_in  : in std_logic_vector(13 downto 0);
+    v_in  : in std_logic_vector(2 downto 0);
     --outputs
-    amp_out : out std_logic_vector(11 downto 0);
+    amp_out : out std_logic_vector(9 downto 0);
     take_sample : out std_logic
   );
 end component;
@@ -94,12 +100,13 @@ component DAC_interface is
     -- inputs
     -- 1MHz clock
     sclk : in std_logic;
-    -- start bit
-    key_down : in std_logic;
+  
     -- parallel data input
-    data_in : in std_logic_vector(11 downto 0);
-    -- 3 bit velocity from dpath
-    velocity_in : in std_logic_vector(2 downto 0);
+    amp1_in : in std_logic_vector(9 downto 0);
+    amp2_in : in std_logic_vector(9 downto 0);
+    amp3_in : in std_logic_vector(9 downto 0);
+    amp4_in : in std_logic_vector(9 downto 0);
+  
      -- signal for 44 kHz sampler
     take_sample          : in std_logic;
     
@@ -116,12 +123,20 @@ end component;
 --=============================================================
 signal sclk_sig         : std_logic := '0';
 signal rx_done_sig      : std_logic := '0';                   
-signal byte_sig         : std_logic_vector(7 downto 0) := (others => '0');
-signal key_down_sig     : std_logic := '0';
-signal m_sig            : std_logic_vector(13 downto 0) := (others => '0');
-signal ampl_sig         : std_logic_vector(11 downto 0) := (others => '0');
+signal midi_byte_sig    : std_logic_vector(7 downto 0) := (others => '0');
+signal m1_sig           : std_logic_vector(13 downto 0) := (others => '0');
+signal m2_sig           : std_logic_vector(13 downto 0) := (others => '0');
+signal m3_sig           : std_logic_vector(13 downto 0) := (others => '0');
+signal m4_sig           : std_logic_vector(13 downto 0) := (others => '0');
+signal v1_sig           : std_logic_vector(2 downto 0) := (others => '0');
+signal v2_sig           : std_logic_vector(2 downto 0) := (others => '0');
+signal v3_sig           : std_logic_vector(2 downto 0) := (others => '0');
+signal v4_sig           : std_logic_vector(2 downto 0) := (others => '0');
+signal amp1_sig         : std_logic_vector(9 downto 0) := (others => '0');
+signal amp2_sig         : std_logic_vector(9 downto 0) := (others => '0');
+signal amp3_sig         : std_logic_vector(9 downto 0) := (others => '0');
+signal amp4_sig         : std_logic_vector(9 downto 0) := (others => '0');
 signal take_sample_sig  : std_logic := '0';
-signal velocity_sig     : std_logic_vector(2 downto 0) := (others => '0');
 
 --=============================================================
 --Port Mapping + Processes:
@@ -140,34 +155,67 @@ receiver : MIDI_receiver
 port map(
   sclk => sclk_sig,
   MIDI_in => MIDI_in_port,
-  byte_out => byte_sig,
+  byte_out => midi_byte_sig,
   rx_done => rx_done_sig);
 
 dpath : datapath
 port map(
   sclk => sclk_sig,
-  byte_in => byte_sig,
+  byte_in => midi_byte_sig,
   rx_done => rx_done_sig,
-  key_down => key_down_sig,
-  m_out => m_sig,
-  velocity_out => velocity_sig
+  m1_out => m1_sig,
+  m2_out => m2_sig,
+  m3_out => m3_sig,
+  m4_out => m4_sig,
+  v1_out => v1_sig,
+  v2_out => v2_sig,
+  v3_out => v3_sig,
+  v4_out => v4_sig
 );
 
-DDS_blk : DDS
+DDS1_blk : DDS
 port map(
   sclk => sclk_sig,
-  m_in => m_sig,
-  amp_out => ampl_sig,
+  m_in => m1_sig,
+  v_in => v1_sig,
+  amp_out => amp1_sig,
   take_sample => take_sample_sig
-  
+);
+
+DDS2_blk : DDS
+port map(
+  sclk => sclk_sig,
+  m_in => m2_sig,
+  v_in => v2_sig,
+  amp_out => amp2_sig,
+  take_sample => open
+);
+
+DDS3_blk : DDS
+port map(
+  sclk => sclk_sig,
+  m_in => m3_sig,
+  v_in => v3_sig,
+  amp_out => amp3_sig,
+  take_sample => open
+);
+
+DDS4_blk : DDS
+port map(
+  sclk => sclk_sig,
+  m_in => m4_sig,
+  v_in => v4_sig,
+  amp_out => amp4_sig,
+  take_sample => open
 );
 
 DAC : DAC_Interface
 port map(
    sclk => sclk_sig, 
-   data_in => ampl_sig,
-   velocity_in => velocity_sig,
-   key_down => key_down_sig,   
+   amp1_in => amp1_sig,
+   amp2_in => amp2_sig,
+   amp3_in => amp3_sig,
+   amp4_in => amp4_sig,
    take_sample => take_sample_sig,
    s_data => spi_data_port,
    spi_CS => spi_cs_port

@@ -15,10 +15,11 @@ entity DAC_interface is
     --timing:
     sclk 			 : in std_logic;
 
-    --:
-    key_down             : in std_logic; --signal that key has been pressed
-    data_in              : in std_logic_vector(11 downto 0);
-    velocity_in          : in std_logic_vector(2 downto 0);
+    --inputs:
+    amp1_in : in std_logic_vector(9 downto 0);
+    amp2_in : in std_logic_vector(9 downto 0);
+    amp3_in : in std_logic_vector(9 downto 0);
+    amp4_in : in std_logic_vector(9 downto 0);
     take_sample          : in std_logic; -- signal for 44 kHz sampler
     
 
@@ -66,8 +67,7 @@ component counter is
 --Counter signals
     signal shiftNum            : integer := 0;
 
-    signal data_w_volume : std_logic_vector(11 downto 0) := (others => '0');
-    signal data_w_volume_padded : std_logic_vector(15 downto 0) := (others => '0');
+    signal summed_amplitude    : std_logic_vector(11 downto 0);
 
     BEGIN
 
@@ -79,12 +79,12 @@ stateUpdate : process(sclk)
     end if;
 end process stateUpdate;
 
-nextStateLogic : process(current_state, bit_tc, key_down, take_sample)
+nextStateLogic : process(current_state, bit_tc, take_sample)
     begin
     next_state <= current_state; --Default
     case current_state is
         when sIdle =>
-            if key_down = '1' and take_sample = '1' then --Wait for start bit
+            if take_sample = '1' then --Wait for start bit
                 next_state <= sLoad;
             end if; --Else stay Idle
         when sLoad =>
@@ -130,7 +130,7 @@ shift_Register : process(sclk)
     begin
     if rising_edge(sclk) then
         if load_en = '1' then
-            reg <= "0000" & data_w_volume;
+            reg <= "0000" & not summed_amplitude(11) &  summed_amplitude(10 downto 0);
         elsif shift_en = '1' then --Should not be both on at any time
             reg <= reg(14 downto 0) & '0';
         end if;
@@ -139,11 +139,9 @@ end process shift_Register;
 
 --================================================================================
 
-  -- divide by 8 and multiply by 1-8
-  data_w_volume_padded <= std_logic_vector(shift_right(unsigned(data_in), 3) * (1 + unsigned('0' & velocity_in)));
 
-
---Tie s_data to MSB of shift Register
-    s_data <= reg(15);
-data_w_volume <= data_w_volume_padded(11 downto 0);
+-- sum the amplitudes together
+summed_amplitude <= std_logic_vector(unsigned("00" & amp1_in) + unsigned("00" & amp2_in) + unsigned("00" & amp3_in) + unsigned("00" & amp4_in));
+-- Tie s_data to MSB of shift Register
+s_data <= reg(15);
 end behavioral_architecture;

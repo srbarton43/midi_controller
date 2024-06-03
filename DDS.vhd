@@ -16,7 +16,8 @@ entity DDS is
   port (
     sclk    : in  std_logic;
     m_in    : in  std_logic_vector(13 downto 0);
-    amp_out : out std_logic_vector(11 downto 0);
+    v_in    : in std_logic_vector(2 downto 0);
+    amp_out : out std_logic_vector(9 downto 0);
     take_sample : out std_logic
     );
 end DDS;
@@ -56,6 +57,8 @@ signal m         : unsigned(13 downto 0);
 signal addr_count : unsigned(14 downto 0) := "000000000000000";
 signal full_amp_sig : std_logic_vector(15 downto 0);  --LUT gives a 16 bit signal, will take first 12 bits to DAC
 signal padded_addr : std_logic_vector(15 downto 0);
+signal raw_amp : std_logic_vector(11 downto 0) := (others => '0');
+signal amp_w_volume_padded : std_logic_vector(15 downto 0) := (others => '0');
 
 --=============================================================
 --Port Mapping + Processes:
@@ -98,7 +101,16 @@ end process addr_count_logic;
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 --Asynchronous
 --+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-amp_out <= not full_amp_sig(11) & full_amp_sig(10 downto 0);  --Tie first 12 to amplitude output
+process(m_in)
+begin
+  raw_amp <= not full_amp_sig(11) & full_amp_sig(10 downto 0);  --Tie first 12 to amplitude output
+  amp_w_volume_padded <= std_logic_vector(shift_right(unsigned(raw_amp), 3) * (1 + unsigned('0' & v_in)));
+  amp_out <= amp_w_volume_padded(11 downto 2);
+  
+  if m_in = "00000000000000" then
+    amp_out <= (others => '0');
+  end if;
+end process;
 m <= unsigned(m_in);                   --M tied to M input, made unsigned
 take_sample <= sample_tc;
 
