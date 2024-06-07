@@ -6,6 +6,14 @@ Sam Barton & Grant Foley
 
 This repository contains vhdl code for our ENGS31--Digital Electronics Final Project, a simple midi-controller.
 
+## Demonstration
+
+### Image of Controller
+![Image of Controller](docs/IMG_8385.HEIC "Image of Controller")
+
+### Video of Playing a MIDI Keyboard
+
+
 ### Input Ports
 
 * serial MIDI signal (31.25 kHz baudrate)
@@ -13,7 +21,7 @@ This repository contains vhdl code for our ENGS31--Digital Electronics Final Pro
 
 ### Output Ports
 
-The intended output device is the [Pmod DA2](https://digilent.com/shop/pmod-da2-two-12-bit-d-a-outputs), a digital to analog SPI interface which then connects to a speaker through an amp. 
+The intended output device is the [Pmod DA2](https://digilent.com/shop/pmod-da2-two-12-bit-d-a-outputs), a digital to analog SPI interface which then connects to a speaker through an amp.
 
 * SPI chip select signal
 * serial data signal
