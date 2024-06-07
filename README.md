@@ -9,7 +9,7 @@ This repository contains vhdl code for our ENGS31--Digital Electronics Final Pro
 ## Demonstration
 
 ### Image of Controller
-![Image of Controller](docs/IMG_8385.HEIC "Image of Controller")
+![Image of Controller](docs/midi_controller.jpeg "Image of Controller")
 
 ### Video of Playing a MIDI Keyboard
 
